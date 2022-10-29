@@ -26,10 +26,11 @@ def group_posts(request, slug):
 def profile(request, username):
     author = get_object_or_404(User, username=username)
     following = False
-    if request.user.id is None:
-        following = False
-    elif Follow.objects.filter(author=author, user=request.user).exists():
-        following = True
+    if request.user.is_authenticated:
+        following = Follow.objects.filter(
+            author=author,
+            user=request.user
+        ).exists()
     user_posts = author.posts.all()
     posts_count = user_posts.count()
     context = {
@@ -113,14 +114,10 @@ def follow_index(request):
 @login_required
 def profile_follow(request, username):
     author = get_object_or_404(User, username=username)
-    if request.user == author:
-        return HttpResponseForbidden(
-            'Что за нарциссизм? Подписаться можно только на другого автора!'
-        )
-    if Follow.objects.filter(
+    if request.user != author and not Follow.objects.filter(
         author=author,
         user=request.user
-    ).exists() is False:
+    ).exists():
         Follow.objects.create(author=author, user=request.user)
     return redirect('posts:profile', username=username)
 
@@ -128,5 +125,7 @@ def profile_follow(request, username):
 @login_required
 def profile_unfollow(request, username):
     author = get_object_or_404(User, username=username)
-    Follow.objects.filter(author=author, user=request.user).delete()
+    follow_obj = Follow.objects.filter(author=author, user=request.user)
+    if follow_obj.exists():
+        follow_obj.delete()
     return redirect('posts:profile', username=username)

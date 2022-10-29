@@ -63,7 +63,7 @@ class PostsViewTests(TestCase):
         self.authorized_client2 = Client()
         self.authorized_client2.force_login(PostsViewTests.user2)
 
-    def context_unpack(self, first_object):
+    def context_value_test(self, first_object):
         context_dict = {
             'author': first_object.author.username,
             'post_text': first_object.text,
@@ -108,7 +108,7 @@ class PostsViewTests(TestCase):
         response = self.authorized_client1.get(
             reverse('posts:main'))
         first_object = response.context['page_obj'][0]
-        self.context_unpack(first_object)
+        self.context_value_test(first_object)
 
     def test_group_list_show_correct_context(self):
         """Шаблон group_list сформирован с правильным контекстом"""
@@ -117,7 +117,7 @@ class PostsViewTests(TestCase):
             kwargs={'slug': PostsViewTests.post.group.slug}
         ))
         first_object = response.context['page_obj'][0]
-        self.context_unpack(first_object)
+        self.context_value_test(first_object)
         group_object = response.context['group']
         self.assertEqual(group_object,
                          PostsViewTests.post.group)
@@ -129,7 +129,7 @@ class PostsViewTests(TestCase):
             kwargs={'username': PostsViewTests.post.author.username}
         ))
         first_object = response.context['page_obj'][0]
-        self.context_unpack(first_object)
+        self.context_value_test(first_object)
         author_object = response.context['author']
         posts_count_object = response.context['posts_count']
         self.assertEqual(author_object, PostsViewTests.post.author)
@@ -143,7 +143,7 @@ class PostsViewTests(TestCase):
             kwargs={'post_id': PostsViewTests.post.pk}
         ))
         first_object = response.context['post']
-        self.context_unpack(first_object)
+        self.context_value_test(first_object)
         posts_count_object = response.context['author_posts']
         self.assertEqual(first_object, PostsViewTests.post)
         self.assertEqual(posts_count_object,
@@ -249,8 +249,8 @@ class PostsViewTests(TestCase):
         new_posts = response_new.content
         self.assertNotEqual(old_posts, new_posts)
 
-    def test_follow_unfollow(self):
-        """Проверка подписок/отписок на автора"""
+    def test_follow(self):
+        """Проверка подписок на автора"""
         self.authorized_client1.get(reverse(
             'posts:profile_follow', kwargs={'username': PostsViewTests.user2}
         ))
@@ -260,13 +260,20 @@ class PostsViewTests(TestCase):
                 author=PostsViewTests.user2
             ).exists()
         )
-        self.authorized_client1.get(reverse(
-            'posts:profile_unfollow', kwargs={'username': PostsViewTests.user2}
+
+    def test_unfollow(self):
+        """Проверка отписок от автора"""
+        Follow.objects.create(
+            user=PostsViewTests.user2,
+            author=PostsViewTests.user1
+        )
+        self.authorized_client2.get(reverse(
+            'posts:profile_unfollow', kwargs={'username': PostsViewTests.user1}
         ))
         self.assertFalse(
             Follow.objects.filter(
-                user=PostsViewTests.user1,
-                author=PostsViewTests.user2
+                user=PostsViewTests.user2,
+                author=PostsViewTests.user1
             ).exists()
         )
 

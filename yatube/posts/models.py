@@ -9,6 +9,10 @@ class Group(models.Model):
     slug = models.SlugField(unique=True, verbose_name='Адрес')
     description = models.TextField(verbose_name='Описание')
 
+    class Meta:
+        verbose_name = 'Группа'
+        verbose_name_plural = 'Группы'
+
     def __str__(self) -> str:
         return self.title
 
@@ -36,7 +40,8 @@ class Post(models.Model):
     image = models.ImageField(
         'Картинка',
         upload_to='posts/',
-        blank=True
+        blank=True,
+        null=True,
     )
 
     class Meta:
@@ -55,11 +60,9 @@ class Comment(models.Model):
                                     verbose_name='Дата публикации')
     post = models.ForeignKey(
         Post,
-        blank=False,
-        null=False,
         on_delete=models.CASCADE,
         related_name='comments',
-        verbose_name='Комментарий',
+        verbose_name='Текст поста',
         help_text='Комментарий к посту',
     )
     author = models.ForeignKey(
@@ -92,6 +95,9 @@ class Follow(models.Model):
         verbose_name='Автор'
     )
 
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+
     def __str__(self) -> str:
-        return (f'Пользователь {self.user.username} '
-                f'подписан на автора {self.author.username}')
+        return (f'{self.user.username} подписан на {self.author.username}')

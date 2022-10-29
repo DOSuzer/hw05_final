@@ -29,8 +29,8 @@ class PostModelTest(TestCase):
             PostModelTest.group: PostModelTest.group.title,
             PostModelTest.post: PostModelTest.post.text[:15],
             PostModelTest.follow: (
-                f'Пользователь {PostModelTest.user1.username} '
-                f'подписан на автора {PostModelTest.user2.username}'
+                f'{PostModelTest.user1.username} подписан '
+                f'на {PostModelTest.user2.username}'
             ),
         }
         for field, expected_value in field_str.items():

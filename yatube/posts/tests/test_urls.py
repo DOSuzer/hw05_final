@@ -81,6 +81,7 @@ class PostURLTests(TestCase):
             f'/posts/{PostURLTests.post.pk}/': 'posts/post_detail.html',
             '/create/': 'posts/create_post.html',
             f'/posts/{PostURLTests.post.pk}/edit/': 'posts/create_post.html',
+            '/follow/': 'posts/follow.html'
         }
         for address, template in templates_url_names.items():
             with self.subTest(address=address):
@@ -96,4 +97,17 @@ class PostURLTests(TestCase):
         self.assertRedirects(
             response,
             f'/auth/login/?next=/posts/{PostURLTests.post.pk}/comment/'
+        )
+
+    def test_follow_authorized(self):
+        """Страница /follow/ доступна авторизованному пользователю."""
+        response = self.authorized_author.get('/follow/')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+    def test_redirect_unautuhorized_follow(self):
+        """Перенаправление гостя при запросе /follow/."""
+        response = self.guest_client.get('/follow/')
+        self.assertRedirects(
+            response,
+            '/auth/login/?next=/follow/'
         )

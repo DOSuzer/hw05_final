@@ -127,6 +127,19 @@ class PostFormTests(TestCase):
         """Валидная форма редактирует пост в Post."""
         post_count = Post.objects.count()
         new_text = 'Новый текст поста'
+        small_gif3 = (
+            b'\x47\x49\x46\x38\x39\x61\x02\x00'
+            b'\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+            b'\x0A\x00\x3B'
+        )
+        uploaded = SimpleUploadedFile(
+            name='small3.gif',
+            content=small_gif3,
+            content_type='image/gif'
+        )
         response = self.authorized_client2.post(
             reverse(
                 'posts:post_edit',
@@ -135,6 +148,7 @@ class PostFormTests(TestCase):
             data={
                 'text': new_text,
                 'group': PostFormTests.group2.id,
+                'image': uploaded,
             },
             follow=True,
         )
@@ -147,8 +161,14 @@ class PostFormTests(TestCase):
             )
         )
         self.assertEqual(Post.objects.count(), post_count)
-        self.assertEqual(PostFormTests.post2.text, new_text)
-        self.assertEqual(PostFormTests.post2.group.id, PostFormTests.group2.id)
+        self.assertTrue(
+            Post.objects.filter(
+                id=PostFormTests.post2.id,
+                text='Новый текст поста',
+                group=PostFormTests.group2.id,
+                image='posts/small3.gif'
+            ).exists()
+        )
 
     def test_add_comment_form(self):
         """Валидная форма создает коммент к Post."""
@@ -173,7 +193,10 @@ class PostFormTests(TestCase):
         )
         self.assertEqual(Comment.objects.count(), comment_count + 1)
         self.assertTrue(
-            Comment.objects.filter(text='Тестовый коммент 1').exists()
+            Comment.objects.filter(
+                text='Тестовый коммент 1',
+                post=PostFormTests.post1.id,
+            ).exists()
         )
 
     def test_add_comment_unauthorized_form(self):
